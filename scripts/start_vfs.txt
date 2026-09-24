@@ -1,0 +1,8 @@
+vfs-tree
+ls
+ls -l /home
+cd "My Documents"
+cd 'a b' "c d"
+
+pwd
+ls "не выполнится"

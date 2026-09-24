@@ -2,7 +2,7 @@ import unittest
 import io
 import contextlib
 
-from src.main import execute, parse, run_command, run_script
+from src.main import execute, load_vfs, parse, run_command, run_script
 
 
 class TestParse(unittest.TestCase):
@@ -26,20 +26,20 @@ class TestRunCommand(unittest.TestCase):
 
     def test_exit(self):
         """Проверяет, что exit завершает работу."""
-        self.assertFalse(run_command(["exit"]))
+        self.assertFalse(run_command(["exit"], {}))
 
     def test_ls(self):
         """Проверяет, что ls не завершает работу."""
-        self.assertTrue(run_command(["ls", "a"]))
+        self.assertTrue(run_command(["ls", "a"], {}))
 
     def test_unknown(self):
         """Проверяет ошибку при неизвестной команде."""
         with self.assertRaises(ValueError):
-            run_command(["pwd"])
+            run_command(["pwd"], {})
 
     def test_empty_line(self):
         """Проверяет, что пустая строка не завершает работу."""
-        self.assertTrue(execute(""))
+        self.assertTrue(execute("", {}))
 
 
 class TestRunScript(unittest.TestCase):
@@ -48,7 +48,7 @@ class TestRunScript(unittest.TestCase):
         """Проверяет, что скрипт останавливается при первой ошибке."""
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
-            run_script("scripts/start_error.txt")
+            run_script("scripts/start_error.txt", {})
         self.assertIn("pwd: команда не найдена", output.getvalue())
         self.assertNotIn("не выполнится", output.getvalue())
 
@@ -56,8 +56,29 @@ class TestRunScript(unittest.TestCase):
         """Проверяет ошибку, если скрипта не существует."""
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
-            run_script("scripts/no_such_file.txt")
+            run_script("scripts/no_such_file.txt", {})
         self.assertIn("не удалось открыть скрипт", output.getvalue())
+
+
+class TestVfs(unittest.TestCase):
+
+    def test_load_minimal(self):
+        """Проверяет загрузку VFS с одним файлом."""
+        vfs = load_vfs("vfs/minimal")
+        self.assertEqual(list(vfs), ["readme.txt"])
+
+    def test_load_deep(self):
+        """Проверяет загрузку VFS с несколькими уровнями папок."""
+        vfs = load_vfs("vfs/deep")
+        notes = vfs["home"]["user"]["docs"]["notes.txt"]
+        self.assertIn("Заметки", notes)
+
+    def test_vfs_tree(self):
+        """Проверяет вывод дерева VFS командой vfs-tree."""
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            run_command(["vfs-tree"], load_vfs("vfs/deep"))
+        self.assertIn("      notes.txt", output.getvalue())
 
 
 if __name__ == "__main__":

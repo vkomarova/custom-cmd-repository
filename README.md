@@ -35,6 +35,33 @@ test_ok.sh        запуск эмулятора со скриптом без �
 test_errors.sh    запуск эмулятора со скриптами с ошибками
 test_no_file.sh   запуск эмулятора с несуществующим скриптом
 ```
+## Этап 3. VFS
+
+В ходе выполнения третей части работы было реализовано:
+
+- VFS загружается из директории на диске, путь задаётся параметром `--vfs`;
+- все папки и файлы (вместе с содержимым) хранятся в памяти в виде
+  словаря, данные на диске не изменяются;
+- служебная команда `vfs-tree` выводит дерево папок и файлов VFS;
+- ошибка, если директория VFS не задана или не существует.
+
+Варианты VFS (папка `vfs`):
+
+```
+vfs/minimal   минимальная VFS: один файл
+vfs/files     несколько файлов
+vfs/deep      не менее 3 уровней файлов и папок
+```
+
+Скрипты для проверки (папка `scripts`):
+
+```
+start_vfs.txt        стартовый скрипт со всеми командами этапов 1-3
+test_vfs_minimal.sh  запуск с минимальной VFS
+test_vfs_files.sh    запуск с VFS из нескольких файлов
+test_vfs_deep.sh     запуск с многоуровневой VFS
+test_vfs_errors.sh   запуск с несуществующей VFS и с файлом вместо папки
+```
 
 ## Структура
 
@@ -42,6 +69,7 @@ test_no_file.sh   запуск эмулятора с несуществующи�
 src/main.py         исходный код
 tests/test_main.py  тесты
 scripts/            стартовые скрипты и скрипты для проверки
+vfs/                варианты VFS для проверки
 run.sh              запуск в Linux/macOS
 run.bat             запуск в Windows
 Makefile            запуск и тесты через make
@@ -74,6 +102,10 @@ make test
 sh scripts/test_ok.sh
 sh scripts/test_errors.sh
 sh scripts/test_no_file.sh
+sh scripts/test_vfs_minimal.sh
+sh scripts/test_vfs_files.sh
+sh scripts/test_vfs_deep.sh
+sh scripts/test_vfs_errors.sh
 ```
 
 ## Пример работы (этап 1)
@@ -110,6 +142,32 @@ user@computer:~$ ls
 user@computer:~$ cd docs
 Команда: cd
 Аргументы: ['docs']
+user@computer:~$ pwd
+Ошибка: pwd: команда не найдена
+Выполнение скрипта остановлено
+```
+
+
+## Пример работы (этап 3)
+
+```
+$ sh scripts/test_vfs_deep.sh
+Путь к VFS: vfs/deep
+Путь к стартовому скрипту: scripts/start_vfs.txt
+user@computer:~$ vfs-tree
+etc/
+  hostname
+home/
+  user/
+    docs/
+      notes.txt
+      plan.txt
+    music/
+      list.txt
+user@computer:~$ ls
+Команда: ls
+Аргументы: []
+...
 user@computer:~$ pwd
 Ошибка: pwd: команда не найдена
 Выполнение скрипта остановлено

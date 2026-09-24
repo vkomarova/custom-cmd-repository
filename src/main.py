@@ -1,6 +1,7 @@
 import getpass
 import socket
 import argparse
+import os
 
 
 def get_prompt():
@@ -34,11 +35,35 @@ def parse(line):
     return words
 
 
-def run_command(words):
+def load_vfs(path):
+    vfs = {}
+    for name in os.listdir(path):
+        full_path = os.path.join(path, name)
+        if os.path.isdir(full_path):
+            vfs[name] = load_vfs(full_path)
+        else:
+            with open(full_path, encoding="utf-8") as file:
+                vfs[name] = file.read()
+    return vfs
+
+
+def print_vfs(folder, indent):
+    for name in sorted(folder):
+        if isinstance(folder[name], dict):
+            print(indent + name + "/")
+            print_vfs(folder[name], indent + "  ")
+        else:
+            print(indent + name)
+
+
+def run_command(words, vfs):
     name = words[0]
     args = words[1:]
     if name == "exit":
         return False
+    if name == "vfs-tree":
+        print_vfs(vfs, "")
+        return True
     if name == "ls" or name == "cd":
         print("Команда:", name)
         print("Аргументы:", args)
@@ -46,14 +71,14 @@ def run_command(words):
     raise ValueError(name + ": команда не найдена")
 
 
-def execute(line):
+def execute(line, vfs):
     words = parse(line)
     if not words:
         return True
-    return run_command(words)
+    return run_command(words, vfs)
 
 
-def run_script(path):
+def run_script(path, vfs):
     try:
         with open(path, encoding="utf-8") as file:
             lines = file.read().splitlines()
@@ -63,7 +88,7 @@ def run_script(path):
     for line in lines:
         print(get_prompt() + line)
         try:
-            if not execute(line):
+            if not execute(line, vfs):
                 return
         except ValueError as error:
             print("Ошибка:", error)
@@ -71,11 +96,11 @@ def run_script(path):
             return
 
 
-def repl():
+def repl(vfs):
     while True:
         line = input(get_prompt())
         try:
-            if not execute(line):
+            if not execute(line, vfs):
                 break
         except ValueError as error:
             print("Ошибка:", error)
@@ -88,10 +113,14 @@ def main():
     args = parser.parse_args()
     print("Путь к VFS:", args.vfs)
     print("Путь к стартовому скрипту:", args.script)
+    if args.vfs is None or not os.path.isdir(args.vfs):
+        print("Ошибка: директория VFS не найдена:", args.vfs)
+        return
+    vfs = load_vfs(args.vfs)
     if args.script:
-        run_script(args.script)
+        run_script(args.script, vfs)
     else:
-        repl()
+        repl(vfs)
 
 
 if __name__ == "__main__":
