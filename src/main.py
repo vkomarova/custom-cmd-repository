@@ -1,5 +1,6 @@
 import getpass
 import socket
+import argparse
 
 
 def get_prompt():
@@ -41,23 +42,56 @@ def run_command(words):
     if name == "ls" or name == "cd":
         print("Команда:", name)
         print("Аргументы:", args)
-    else:
-        print(name + ": команда не найдена")
-    return True
+        return True
+    raise ValueError(name + ": команда не найдена")
 
 
-def main():
+def execute(line):
+    words = parse(line)
+    if not words:
+        return True
+    return run_command(words)
+
+
+def run_script(path):
+    try:
+        with open(path, encoding="utf-8") as file:
+            lines = file.read().splitlines()
+    except OSError:
+        print("Ошибка: не удалось открыть скрипт", path)
+        return
+    for line in lines:
+        print(get_prompt() + line)
+        try:
+            if not execute(line):
+                return
+        except ValueError as error:
+            print("Ошибка:", error)
+            print("Выполнение скрипта остановлено")
+            return
+
+
+def repl():
     while True:
         line = input(get_prompt())
         try:
-            words = parse(line)
+            if not execute(line):
+                break
         except ValueError as error:
             print("Ошибка:", error)
-            continue
-        if not words:
-            continue
-        if not run_command(words):
-            break
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Эмулятор командной строки")
+    parser.add_argument("--vfs", help="путь к физическому расположению VFS")
+    parser.add_argument("--script", help="путь к стартовому скрипту")
+    args = parser.parse_args()
+    print("Путь к VFS:", args.vfs)
+    print("Путь к стартовому скрипту:", args.script)
+    if args.script:
+        run_script(args.script)
+    else:
+        repl()
 
 
 if __name__ == "__main__":

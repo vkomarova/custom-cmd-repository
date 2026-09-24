@@ -1,6 +1,8 @@
 import unittest
+import io
+import contextlib
 
-from src.main import parse, run_command
+from src.main import execute, parse, run_command, run_script
 
 
 class TestParse(unittest.TestCase):
@@ -29,6 +31,33 @@ class TestRunCommand(unittest.TestCase):
     def test_ls(self):
         """Проверяет, что ls не завершает работу."""
         self.assertTrue(run_command(["ls", "a"]))
+
+    def test_unknown(self):
+        """Проверяет ошибку при неизвестной команде."""
+        with self.assertRaises(ValueError):
+            run_command(["pwd"])
+
+    def test_empty_line(self):
+        """Проверяет, что пустая строка не завершает работу."""
+        self.assertTrue(execute(""))
+
+
+class TestRunScript(unittest.TestCase):
+
+    def test_stop_on_error(self):
+        """Проверяет, что скрипт останавливается при первой ошибке."""
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            run_script("scripts/start_error.txt")
+        self.assertIn("pwd: команда не найдена", output.getvalue())
+        self.assertNotIn("не выполнится", output.getvalue())
+
+    def test_no_file(self):
+        """Проверяет ошибку, если скрипта не существует."""
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            run_script("scripts/no_such_file.txt")
+        self.assertIn("не удалось открыть скрипт", output.getvalue())
 
 
 if __name__ == "__main__":
