@@ -1,0 +1,3 @@
+cp etc/hostname etc/name
+cp home/user home/copy
+ls "не выполнится"

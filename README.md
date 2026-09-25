@@ -65,7 +65,7 @@ test_vfs_errors.sh   запуск с несуществующей VFS и с фа
 
 ## Этап 4. Основные команды
 
-Реализовано:
+В ходе выполнения четвертой части работы было реализовано:
 
 - `ls [путь]` - выводит содержимое папки или имя файла;
 - `cd [путь]` - переходит в папку, без аргументов переходит в корень VFS;
@@ -87,6 +87,27 @@ start_whoami_error.txt  ошибка whoami: лишний аргумент
 test_commands.sh        запуск всех скриптов этапа 4
 ```
 
+## Этап 5. Дополнительные команды
+
+В ходе выполнения пятой части работы было реализовано:
+
+- `rm файл` - удаляет файл;
+- `rm -r папка` - удаляет папку со всем содержимым;
+- `cp файл новое_имя` - копирует файл под новым именем;
+- `cp файл папка` - копирует файл в существующую папку;
+- `cp -r папка новое_имя` - копирует папку со всем содержимым;
+- все изменения выполняются только в памяти, файлы на диске не меняются;
+- ошибки: несуществующий путь, папка без ключа `-r`, удаление или
+  копирование корня, неверное число аргументов.
+
+Скрипты для проверки (папка `scripts`):
+
+```
+start_change.txt    все режимы команд rm и cp
+start_rm_error.txt  ошибка rm: удаление папки без -r
+start_cp_error.txt  ошибка cp: копирование папки без -r
+test_change.sh      запуск всех скриптов этапа 5 и проверка диска
+```
 
 ## Структура
 
@@ -132,6 +153,7 @@ sh scripts/test_vfs_files.sh
 sh scripts/test_vfs_deep.sh
 sh scripts/test_vfs_errors.sh
 sh scripts/test_commands.sh
+sh scripts/test_change.sh
 ```
 
 ## Пример работы (этап 1)
@@ -226,4 +248,31 @@ user@computer:~$ cd home/user
 user@computer:~/home/user$ cd docs/notes.txt
 Ошибка: cd: docs/notes.txt: это не каталог
 Выполнение скрипта остановлено
+```
+
+## Пример работы (этап 5)
+
+```
+$ sh scripts/test_change.sh
+Путь к VFS: vfs/deep
+Путь к стартовому скрипту: scripts/start_change.txt
+user@computer:~$ cp home/user/docs/notes.txt home/user/docs/copy.txt
+user@computer:~$ ls home/user/docs
+copy.txt
+notes.txt
+plan.txt
+...
+user@computer:~/home/user$ rm -r music
+user@computer:~/home/user$ ls
+backup
+docs
+...
+Путь к VFS: vfs/deep
+Путь к стартовому скрипту: scripts/start_rm_error.txt
+user@computer:~$ rm home/user/docs/plan.txt
+user@computer:~$ rm home/user
+Ошибка: rm: home/user: это каталог
+Выполнение скрипта остановлено
+...
+Файлы на диске не изменились:
 ```

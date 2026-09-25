@@ -2,9 +2,11 @@ import getpass
 import socket
 import argparse
 import os
+import copy
 
 TAIL_LINES = 10
 MAX_ARGS = 1
+CP_ARGS = 2
 
 
 def get_prompt(cwd):
@@ -165,6 +167,10 @@ def run_command(words, vfs, cwd):
         run_tail(args, vfs, cwd)
     elif name == "whoami":
         run_whoami(args)
+    elif name == "rm":
+        run_rm(args, vfs, cwd)
+    elif name == "cp":
+        run_cp(args, vfs, cwd)
     else:
         raise ValueError(name + ": команда не найдена")
     return True
@@ -203,6 +209,54 @@ def repl(vfs, cwd):
                 break
         except ValueError as error:
             print("Ошибка:", error)
+
+
+def get_option_r(args):
+    """Проверяет ключ -r. Возвращает признак ключа и остальные аргументы."""
+    if args and args[0] == "-r":
+        return True, args[1:]
+    return False, args
+
+
+def run_rm(args, vfs, cwd):
+    """Удаляет файл, а с ключом -r удаляет папку со всем содержимым."""
+    recursive, args = get_option_r(args)
+    if not args:
+        raise ValueError("rm: не указан файл")
+    if len(args) > MAX_ARGS:
+        raise ValueError("rm: слишком много аргументов")
+    parts = get_path(args[0], cwd)
+    node = find(vfs, parts)
+    if node is None:
+        raise ValueError("rm: " + args[0] + ": нет такого файла или каталога")
+    if not parts:
+        raise ValueError("rm: нельзя удалить корневой каталог")
+    if isinstance(node, dict) and not recursive:
+        raise ValueError("rm: " + args[0] + ": это каталог")
+    parent = find(vfs, parts[:-1])
+    del parent[parts[-1]]
+
+
+def run_cp(args, vfs, cwd):
+    """Копирует файл, а с ключом -r копирует папку со всем содержимым."""
+    recursive, args = get_option_r(args)
+    if len(args) != CP_ARGS:
+        raise ValueError("cp: нужно указать источник и назначение")
+    source_parts = get_path(args[0], cwd)
+    source = find(vfs, source_parts)
+    if source is None:
+        raise ValueError("cp: " + args[0] + ": нет такого файла или каталога")
+    if not source_parts:
+        raise ValueError("cp: нельзя скопировать корневой каталог")
+    if isinstance(source, dict) and not recursive:
+        raise ValueError("cp: " + args[0] + ": это каталог")
+    target_parts = get_path(args[1], cwd)
+    if isinstance(find(vfs, target_parts), dict):
+        target_parts.append(source_parts[-1])
+    parent = find(vfs, target_parts[:-1])
+    if not isinstance(parent, dict):
+        raise ValueError("cp: " + args[1] + ": нет такого каталога")
+    parent[target_parts[-1]] = copy.deepcopy(source)
 
 
 def main():

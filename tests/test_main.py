@@ -109,6 +109,7 @@ class TestCommands(unittest.TestCase):
             run_command(["ls", "nobody"], self.vfs, [])
 
     def test_cd(self):
+
         """Проверяет переход в папку и обратно."""
         cwd = []
         run_command(["cd", "home/user"], self.vfs, cwd)
@@ -138,6 +139,60 @@ class TestCommands(unittest.TestCase):
         """Проверяет вывод имени пользователя."""
         output = run_and_get_output(["whoami"], self.vfs, [])
         self.assertEqual(output, getpass.getuser() + "\n")
+
+
+class TestChangeCommands(unittest.TestCase):
+
+    def setUp(self):
+        """Загружает многоуровневую VFS перед каждым тестом."""
+        self.vfs = load_vfs("vfs/deep")
+
+    def test_rm_file(self):
+        """Проверяет удаление файла."""
+        run_command(["rm", "etc/hostname"], self.vfs, [])
+        self.assertEqual(self.vfs["etc"], {})
+
+    def test_rm_dir(self):
+        """Проверяет удаление папки с ключом -r."""
+        run_command(["rm", "-r", "home"], self.vfs, [])
+        self.assertEqual(list(self.vfs), ["etc"])
+
+    def test_rm_dir_error(self):
+        """Проверяет ошибку rm для папки без ключа -r."""
+        with self.assertRaises(ValueError):
+            run_command(["rm", "home"], self.vfs, [])
+
+    def test_rm_only_in_memory(self):
+        """Проверяет, что rm не меняет файлы на диске."""
+        run_command(["rm", "-r", "home"], self.vfs, [])
+        self.assertIn("home", load_vfs("vfs/deep"))
+
+    def test_cp_file(self):
+        """Проверяет копирование файла под новым именем."""
+        run_command(["cp", "etc/hostname", "etc/name"], self.vfs, [])
+        self.assertEqual(self.vfs["etc"]["name"], self.vfs["etc"]["hostname"])
+
+    def test_cp_to_dir(self):
+        """Проверяет копирование файла в существующую папку."""
+        run_command(["cp", "etc/hostname", "home"], self.vfs, [])
+        self.assertIn("hostname", self.vfs["home"])
+
+    def test_cp_dir(self):
+        """Проверяет копирование папки с ключом -r."""
+        run_command(["cp", "-r", "home/user", "copy"], self.vfs, [])
+        run_command(["rm", "copy/docs/notes.txt"], self.vfs, [])
+        self.assertNotIn("notes.txt", self.vfs["copy"]["docs"])
+        self.assertIn("notes.txt", self.vfs["home"]["user"]["docs"])
+
+    def test_cp_dir_error(self):
+        """Проверяет ошибку cp для папки без ключа -r."""
+        with self.assertRaises(ValueError):
+            run_command(["cp", "home", "copy"], self.vfs, [])
+
+    def test_cp_no_source(self):
+        """Проверяет ошибку cp для несуществующего источника."""
+        with self.assertRaises(ValueError):
+            run_command(["cp", "nobody.txt", "copy.txt"], self.vfs, [])
 
 
 if __name__ == "__main__":

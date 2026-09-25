@@ -1,0 +1,3 @@
+rm home/user/docs/plan.txt
+rm home/user
+ls "не выполнится"

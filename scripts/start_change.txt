@@ -1,0 +1,19 @@
+ls home/user/docs
+cp home/user/docs/notes.txt home/user/docs/copy.txt
+ls home/user/docs
+tail home/user/docs/copy.txt
+cp /etc/hostname home/user
+ls home/user
+cd home/user
+cp -r docs backup
+ls backup
+rm backup/plan.txt
+ls backup
+ls docs
+rm hostname
+rm -r music
+ls
+rm -r /etc
+cd
+vfs-tree
+exit
