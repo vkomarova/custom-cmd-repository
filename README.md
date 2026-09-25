@@ -63,6 +63,31 @@ test_vfs_deep.sh     запуск с многоуровневой VFS
 test_vfs_errors.sh   запуск с несуществующей VFS и с файлом вместо папки
 ```
 
+## Этап 4. Основные команды
+
+Реализовано:
+
+- `ls [путь]` - выводит содержимое папки или имя файла;
+- `cd [путь]` - переходит в папку, без аргументов переходит в корень VFS;
+- `tail [-n N] файл` - выводит последние N строк файла (по умолчанию 10);
+- `whoami` - выводит имя текущего пользователя;
+- пути бывают абсолютные (`/home/user`) и относительные (`docs`, `..`, `.`);
+- текущая папка показывается в приглашении: `user@computer:~/home/user$`;
+- ошибки: несуществующий путь, `cd` в файл, `tail` для папки,
+  неверное число строк в `tail -n`, лишние аргументы.
+
+Скрипты для проверки (папка `scripts`):
+
+```
+start_commands.txt      все режимы команд ls, cd, tail, whoami
+start_ls_error.txt      ошибка ls: несуществующий путь
+start_cd_error.txt      ошибка cd: переход в файл
+start_tail_error.txt    ошибка tail: неверное число строк
+start_whoami_error.txt  ошибка whoami: лишний аргумент
+test_commands.sh        запуск всех скриптов этапа 4
+```
+
+
 ## Структура
 
 ```
@@ -106,6 +131,7 @@ sh scripts/test_vfs_minimal.sh
 sh scripts/test_vfs_files.sh
 sh scripts/test_vfs_deep.sh
 sh scripts/test_vfs_errors.sh
+sh scripts/test_commands.sh
 ```
 
 ## Пример работы (этап 1)
@@ -170,5 +196,34 @@ user@computer:~$ ls
 ...
 user@computer:~$ pwd
 Ошибка: pwd: команда не найдена
+Выполнение скрипта остановлено
+```
+
+
+## Пример работы (этап 4)
+
+```
+$ sh scripts/test_commands.sh
+Путь к VFS: vfs/deep
+Путь к стартовому скрипту: scripts/start_commands.txt
+user@computer:~$ whoami
+user
+user@computer:~$ ls
+etc
+home
+user@computer:~$ cd home/user/docs
+user@computer:~/home/user/docs$ tail -n 1 notes.txt
+сделать этап 3
+user@computer:~/home/user/docs$ cd ..
+user@computer:~/home/user$ ls
+docs
+music
+...
+user@computer:~$ exit
+Путь к VFS: vfs/deep
+Путь к стартовому скрипту: scripts/start_cd_error.txt
+user@computer:~$ cd home/user
+user@computer:~/home/user$ cd docs/notes.txt
+Ошибка: cd: docs/notes.txt: это не каталог
 Выполнение скрипта остановлено
 ```

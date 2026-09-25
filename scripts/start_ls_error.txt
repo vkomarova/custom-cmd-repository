@@ -1,4 +1,3 @@
-ls
-whoami
-pwd
+ls home
+ls home/nobody
 ls "не выполнится"

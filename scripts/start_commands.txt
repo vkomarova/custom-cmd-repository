@@ -1,0 +1,23 @@
+whoami
+ls
+ls home
+ls /home/user
+ls etc/hostname
+cd home
+cd user/docs
+ls
+tail notes.txt
+tail -n 1 notes.txt
+tail -n 0 plan.txt
+tail /etc/hostname
+cd ..
+ls ../..
+cd ../../home/./user
+cd /home/user/music
+tail "list.txt"
+cd /
+tail -n 2 home/user/docs/notes.txt
+cd home
+cd
+ls
+exit

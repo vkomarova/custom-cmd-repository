@@ -1,4 +1,3 @@
-ls
-whoami
-pwd
+cd home/user
+cd docs/notes.txt
 ls "не выполнится"
