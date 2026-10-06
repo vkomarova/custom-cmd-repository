@@ -59,16 +59,17 @@ def run_script(path):
             lines = file.read().splitlines()
     except OSError:
         print("Ошибка: не удалось открыть скрипт", path)
-        return
+        return True
     for line in lines:
         print(get_prompt() + line)
         try:
             if not execute(line):
-                return
+                return False
         except ValueError as error:
             print("Ошибка:", error)
             print("Выполнение скрипта остановлено")
-            return
+            return True
+    return True
 
 
 def repl():
@@ -89,9 +90,9 @@ def main():
     print("Путь к VFS:", args.vfs)
     print("Путь к стартовому скрипту:", args.script)
     if args.script:
-        run_script(args.script)
-    else:
-        repl()
+        if not run_script(args.script):
+            return
+    repl()
 
 
 if __name__ == "__main__":
