@@ -183,16 +183,17 @@ def run_script(path, vfs, cwd):
             lines = file.read().splitlines()
     except OSError:
         print("Ошибка: не удалось открыть скрипт", path)
-        return
+        return True
     for line in lines:
         print(get_prompt(cwd) + line)
         try:
             if not execute(line, vfs, cwd):
-                return
+                return False
         except ValueError as error:
             print("Ошибка:", error)
             print("Выполнение скрипта остановлено")
-            return
+            return True
+    return True
 
 
 def repl(vfs, cwd):
@@ -218,9 +219,9 @@ def main():
     vfs = load_vfs(args.vfs)
     cwd = []
     if args.script:
-        run_script(args.script, vfs, cwd)
-    else:
-        repl(vfs, cwd)
+        if not run_script(args.script, vfs, cwd):
+            return
+    repl(vfs, cwd)
 
 
 if __name__ == "__main__":
